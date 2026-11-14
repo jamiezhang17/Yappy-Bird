@@ -273,18 +273,30 @@ avconf #(.USE_MIC_INPUT(1)) avc (
 
 
 
+// instantiating my mic detector 
+mic_detector mic_detector_inst (CLOCK_50, KEY[0], audio_in_available, left_channel_audio_in, LEDR[0]);
+
+
+endmodule 
+
 
 
 // ---------- written by me ------------------------- //
 // ---------- ADDED FOR FLAPPY BIRD TESTING ---------------//
 
+module mic_detector (CLOCK_50, resetn, audio_in_available, audio_sample, led);
+
+input CLOCK_50, resetn, audio_in_available; 
+input[31:0] audio_sample;
+output reg led;
+
 // ------------- calculating amplitude ------------------- 
 wire [31:0] audio_magnitude; // 32 bit audio sample
 
 assign audio_magnitude =
-    left_channel_audio_in[31] ? // checks MSB (0 = sample is positive, 1 = negative)
-    -left_channel_audio_in : // if 1, perform 2's complement negation 
-     left_channel_audio_in; // if 0, original passs through 
+    audio_sample[31] ? // checks MSB (0 = sample is positive, 1 = negative)
+    -audio_sample : // if 1, perform 2's complement negation 
+     audio_sample; // if 0, original passs through 
 // -------------------------------------------------------
 
 
@@ -292,18 +304,19 @@ assign audio_magnitude =
 // ----------------turning on LED ----------------------------
 
 parameter THRESHOLD = 32'd1_000_000_000; // tune this if needed 
+parameter HOLD_COUNT = 5_000_000; // tweaked for modelsim 
 reg [22:0] hold_cnt; // count down timer
 
 always @(posedge CLOCK_50) 
 	begin 
-		if (!KEY[0])
+		if (!resetn)
 			hold_cnt <= 0;
 		else if (audio_in_available && audio_magnitude > THRESHOLD)
-			hold_cnt <= 23'd5_000_000; // resets timer everytime it processes a new input sample that's loud enough
+			hold_cnt <= HOLD_COUNT; // resets timer everytime it processes a new input sample that's loud enough
 		else if (hold_cnt != 0)
-			hold_cnt <= hold_cnt - 1; // count down by 1 
+			hold_cnt <= hold_cnt - 1; // count down by 1 if silence
 			
-		LEDR[0] <= (hold_cnt!=0); // LED on while timer hasn't hit 0
+		led <= (hold_cnt!=0); // LED on while timer hasn't hit 0
 	end 
 	
 
@@ -315,3 +328,4 @@ always @(posedge CLOCK_50)
 
 
 endmodule
+
