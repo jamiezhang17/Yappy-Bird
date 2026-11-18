@@ -16,7 +16,7 @@ module gravity_test (KEY, CLOCK_50, HEX0, HEX1);
 	
 	// instantiate everything 
 	nbit_countdown #(.n(n), .FRAME_COUNT(FRAME_COUNT)) counter_50hz (CLOCK_50, KEY[0], Qout, en);
-	physics_counters sub_counters (CLOCK_50, KEY[0], en, KEY[1], digit);
+	gravity g (CLOCK_50, KEY[0], en, KEY[1], digit);
 	seg7 d0 (digit[3], digit[2], digit[1], digit[0], HEX0);
 	seg7 d1 (digit[7], digit[6], digit[5], digit[4], HEX1);
 	
@@ -53,8 +53,8 @@ module nbit_countdown (Clk_50, resetn, Q, E);
 endmodule 
 
 
-// counter for display 
-module physics_counters (Clk_50, resetn, E, key_E, y);
+// gravity logic 
+module gravity (Clk_50, resetn, E, key_E, y);
 	input Clk_50, resetn, E, key_E; // E is for 1 sec timer, key_E is the player input 
 	output reg [7:0] y;
 	
